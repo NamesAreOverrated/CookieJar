@@ -1,0 +1,19 @@
+{
+  "name": "cookiejar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "electron-store": "^6.0.1",
+    "matter-js": "^0.20.0"
+  },
+  "devDependencies": {
+    "electron": "^39.2.4"
+  }
+}

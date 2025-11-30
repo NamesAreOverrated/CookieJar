@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cookie Jar Statistics</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+
+        .cookie-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .cookie-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .cookie-date {
+            color: #888;
+            font-size: 0.8em;
+        }
+
+        .cookie-tags {
+            margin-top: 5px;
+        }
+
+        .tag {
+            background: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Your Achievements</h1>
+    <div id="stats-summary"></div>
+    <ul class="cookie-list" id="cookie-list"></ul>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        const cookies = ipcRenderer.sendSync('get-cookies');
+        const list = document.getElementById('cookie-list');
+        const summary = document.getElementById('stats-summary');
+
+        summary.innerText = `Total Cookies: ${cookies.length}`;
+
+        cookies.reverse().forEach(cookie => {
+            const li = document.createElement('li');
+            li.className = 'cookie-item';
+
+            const date = new Date(cookie.timestamp).toLocaleString();
+
+            let tagsHtml = '';
+            if (cookie.tags) {
+                tagsHtml = cookie.tags.split(' ').map(t => `<span class="tag">${t}</span>`).join('');
+            }
+
+            li.innerHTML = `
+                <div class="cookie-note"><strong>${cookie.note}</strong></div>
+                <div class="cookie-tags">${tagsHtml}</div>
+                <div class="cookie-date">${date}</div>
+            `;
+            list.appendChild(li);
+        });
+    </script>
+</body>
+
+</html>

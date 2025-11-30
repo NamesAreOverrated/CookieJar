@@ -1,0 +1,97 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#app {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+#jar-back,
+#jar-front,
+#plate {
+    position: absolute;
+    pointer-events: none;
+}
+
+#jar-back {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0 0 20px 20px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+}
+
+#jar-front {
+    border-left: 2px solid rgba(255, 255, 255, 0.5);
+    border-right: 2px solid rgba(255, 255, 255, 0.5);
+    border-bottom: 5px solid rgba(255, 255, 255, 0.6);
+    border-radius: 0 0 20px 20px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    z-index: 15;
+    /* Above canvas */
+}
+
+#plate {
+    background: #f8f8f8;
+    border-radius: 50%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), inset 0 -2px 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+    z-index: 5;
+}
+
+canvas {
+    display: block;
+}
+
+.modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    pointer-events: auto;
+    /* Modal needs interaction */
+    width: 300px;
+}
+
+.hidden {
+    display: none;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+    box-sizing: border-box;
+}
+
+.modal-content button {
+    width: 100%;
+    padding: 10px;
+    background-color: #8b4513;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal-content button:hover {
+    background-color: #a0522d;
+}

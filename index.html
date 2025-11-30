@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cookie Jar Overlay</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="plate"></div>
+    <div id="jar-back"></div>
+    <div id="app">
+        <!-- Physics Canvas will be appended here -->
+    </div>
+    <div id="jar-front"></div>
+
+    <!-- Modal for adding a note -->
+    <div id="note-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Achievement Unlocked!</h3>
+            <p>What did you accomplish?</p>
+            <input type="text" id="note-input" placeholder="I finished the report...">
+            <div class="tags-input">
+                <input type="text" id="tag-input" placeholder="Tags (e.g. #work #fitness)">
+            </div>
+            <button id="save-btn">Put in Jar</button>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+
+</html>
