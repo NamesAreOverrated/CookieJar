@@ -303,6 +303,7 @@ function refreshJar() {
 
 // Initial load
 refreshJar();
+spawnCookie(plateX, plateY - 100);
 
 
 // Mouse control
@@ -373,16 +374,16 @@ setInterval(() => {
     }
 }, 100);
 
-// 2. Spawn Cookie on Click (if clicking Jar)
-Events.on(mouseConstraint, 'mousedown', function (event) {
-    const mousePos = event.mouse.position;
+// 2. Spawn Cookie on Click (if clicking Jar) - REMOVED as per requirement
+// Events.on(mouseConstraint, 'mousedown', function (event) {
+//     const mousePos = event.mouse.position;
 
-    // Check if click is within Jar bounds
-    if (isMouseInJar(mousePos.x, mousePos.y)) {
-        // Spawn a cookie ABOVE THE PLATE
-        spawnCookie(plateX, plateY - 100);
-    }
-});
+//     // Check if click is within Jar bounds
+//     if (isMouseInJar(mousePos.x, mousePos.y)) {
+//         // Spawn a cookie ABOVE THE PLATE
+//         spawnCookie(plateX, plateY - 100);
+//     }
+// });
 
 // 3. Double Click to Open Stats
 // Matter.js doesn't have a native double click, so we implement it.
@@ -451,6 +452,9 @@ setInterval(() => {
                 const randX = jarX - jarWidth / 2 + wallThickness + padding + Math.random() * (jarWidth - 2 * wallThickness - 2 * padding);
                 const randY = jarY - wallThickness - padding - Math.random() * (jarHeight - 100);
                 spawnCookie(randX, randY, true, body.level || 1);
+            } else if (body.label === 'cookie-new' || body.label === 'cookie-settled') {
+                // If the new cookie fell off, spawn a new one
+                spawnCookie(plateX, plateY - 100);
             }
         }
     });
@@ -575,6 +579,9 @@ saveBtn.addEventListener('click', () => {
 
         // Check for merges
         checkForMerges();
+
+        // Spawn a new cookie on the plate
+        spawnCookie(plateX, plateY - 100);
     }
 });
 
