@@ -77,11 +77,138 @@ ipcMain.on('open-stats', () => {
 });
 
 ipcMain.on('get-cookies', (event) => {
-    event.returnValue = store.get('cookies', []);
+    let cookies = store.get('cookies', []);
+    let changed = false;
+    cookies = cookies.map((c, i) => {
+        if (!c.id) {
+            c.id = Date.now().toString() + '-' + i + '-' + Math.random().toString(36).substr(2, 5);
+            changed = true;
+        } else if (typeof c.id !== 'string') {
+            c.id = String(c.id);
+            changed = true;
+        }
+        return c;
+    });
+    if (changed) {
+        store.set('cookies', cookies);
+    }
+    event.returnValue = cookies;
 });
 
 ipcMain.on('save-cookie', (event, cookieData) => {
     const cookies = store.get('cookies', []);
+    // Ensure unique ID
+    cookieData.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
     cookies.push(cookieData);
     store.set('cookies', cookies);
+});
+
+ipcMain.on('update-cookie', (event, updatedCookie) => {
+    const cookies = store.get('cookies', []);
+    // Use loose comparison or string conversion to be safe
+    const index = cookies.findIndex(c => String(c.id) === String(updatedCookie.id));
+    if (index !== -1) {
+        // Preserve timestamp
+        updatedCookie.timestamp = cookies[index].timestamp;
+        cookies[index] = { ...cookies[index], ...updatedCookie };
+        store.set('cookies', cookies);
+        event.returnValue = true;
+    } else {
+        event.returnValue = false;
+    }
+});
+
+ipcMain.on('delete-cookie', (event, cookieId) => {
+    let cookies = store.get('cookies', []);
+    const cookieToDelete = cookies.find(c => String(c.id) === String(cookieId));
+    if (cookieToDelete) {
+        cookies = cookies.filter(c => String(c.id) !== String(cookieId));
+        store.set('cookies', cookies);
+
+        // Notify renderer to remove a visual cookie
+        if (mainWindow) {
+            mainWindow.webContents.send('cookie-deleted', cookieToDelete);
+        }
+        event.returnValue = true;
+    } else {
+        event.returnValue = false;
+    }
+});
+
+// Project Management IPC
+ipcMain.on('get-projects', (event) => {
+    event.returnValue = store.get('projects', []);
+});
+
+ipcMain.on('update-project', (event, updatedProject) => {
+    const projects = store.get('projects', []);
+    // Check uniqueness (excluding self)
+    const exists = projects.some(p => p.name === updatedProject.name && p.id !== updatedProject.id);
+    if (exists) {
+        event.returnValue = { success: false, error: 'Project name already exists' };
+        return;
+    }
+
+    const index = projects.findIndex(p => p.id === updatedProject.id);
+    if (index !== -1) {
+        projects[index] = { ...projects[index], ...updatedProject };
+        store.set('projects', projects);
+        event.returnValue = { success: true };
+    } else {
+        event.returnValue = { success: false, error: 'Project not found' };
+    }
+});
+
+ipcMain.on('save-project', (event, project) => {
+    const projects = store.get('projects', []);
+
+    if (project.id) {
+        // Update existing
+        const index = projects.findIndex(p => p.id === project.id);
+        if (index !== -1) {
+            // Check uniqueness excluding self
+            const nameExists = projects.some(p => p.name === project.name && p.id !== project.id);
+            if (nameExists) {
+                event.returnValue = { success: false, error: 'Project name already exists' };
+                return;
+            }
+            projects[index] = { ...projects[index], ...project };
+        } else {
+            event.returnValue = { success: false, error: 'Project not found' };
+            return;
+        }
+    } else {
+        // Create new
+        // Check uniqueness
+        const exists = projects.some(p => p.name === project.name);
+        if (exists) {
+            event.returnValue = { success: false, error: 'Project name already exists' };
+            return;
+        }
+
+        project.id = Date.now().toString();
+        project.status = 'active';
+        project.createdAt = Date.now();
+        projects.push(project);
+    }
+    store.set('projects', projects);
+    event.returnValue = { success: true, project };
+}); ipcMain.on('archive-project', (event, projectId) => {
+    const projects = store.get('projects', []);
+    const index = projects.findIndex(p => p.id === projectId);
+    if (index !== -1) {
+        projects[index].status = 'archived';
+        store.set('projects', projects);
+    }
+    event.returnValue = true;
+});
+
+ipcMain.on('activate-project', (event, projectId) => {
+    const projects = store.get('projects', []);
+    const index = projects.findIndex(p => p.id === projectId);
+    if (index !== -1) {
+        projects[index].status = 'active';
+        store.set('projects', projects);
+    }
+    event.returnValue = true;
 });

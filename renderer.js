@@ -164,7 +164,8 @@ const world = engine.world;
 const render = Render.create({
     element: document.getElementById('app'),
     engine: engine,
-    options: {
+    options:
+    {
         width: window.innerWidth,
         height: window.innerHeight,
         wireframes: false,
@@ -239,29 +240,39 @@ function updateUiPositions() {
 }
 updateUiPositions();
 
-// Load existing cookies (visual only, simplified for now)
-const savedCookies = ipcRenderer.sendSync('get-cookies');
-const totalSaved = savedCookies.length;
+function refreshJar() {
+    // Remove all saved cookies
+    const bodies = Composite.allBodies(world);
+    const savedBodies = bodies.filter(b => b.label === 'cookie-saved');
+    Composite.remove(world, savedBodies);
 
-// Calculate breakdown and spawn
-let remaining = totalSaved;
-let currentLevel = 1;
+    // Load existing cookies (visual only, simplified for now)
+    const savedCookies = ipcRenderer.sendSync('get-cookies');
+    const totalSaved = savedCookies.length;
 
-while (remaining > 0) {
-    const count = remaining % 5; // How many of this level
-    const nextRemaining = Math.floor(remaining / 5); // How many carry over to next level
+    // Calculate breakdown and spawn
+    let remaining = totalSaved;
+    let currentLevel = 1;
 
-    // Spawn 'count' cookies of 'currentLevel'
-    for (let i = 0; i < count; i++) {
-        const padding = 30;
-        const randX = jarX - jarWidth / 2 + wallThickness + padding + Math.random() * (jarWidth - 2 * wallThickness - 2 * padding);
-        const randY = jarY - wallThickness - padding - Math.random() * (jarHeight - 100);
-        spawnCookie(randX, randY, true, currentLevel);
+    while (remaining > 0) {
+        const count = remaining % 5; // How many of this level
+        const nextRemaining = Math.floor(remaining / 5); // How many carry over to next level
+
+        // Spawn 'count' cookies of 'currentLevel'
+        for (let i = 0; i < count; i++) {
+            const padding = 30;
+            const randX = jarX - jarWidth / 2 + wallThickness + padding + Math.random() * (jarWidth - 2 * wallThickness - 2 * padding);
+            const randY = jarY - wallThickness - padding - Math.random() * (jarHeight - 100);
+            spawnCookie(randX, randY, true, currentLevel);
+        }
+
+        remaining = nextRemaining;
+        currentLevel++;
     }
-
-    remaining = nextRemaining;
-    currentLevel++;
 }
+
+// Initial load
+refreshJar();
 
 
 // Mouse control
@@ -440,19 +451,52 @@ setInterval(() => {
 }, 1000);
 
 
+// Listen for cookie deletion
+ipcRenderer.on('cookie-deleted', (event, cookie) => {
+    refreshJar();
+});
+
 // --- UI Logic ---
 const modal = document.getElementById('note-modal');
 const noteInput = document.getElementById('note-input');
-const tagInput = document.getElementById('tag-input');
+const projectSelect = document.getElementById('project-select');
 const saveBtn = document.getElementById('save-btn');
+const noProjectsMsg = document.getElementById('no-projects-msg');
+const openManagerLink = document.getElementById('open-manager-link');
+
 let currentCookieBody = null;
 let isModalOpen = false;
 
 function showNoteModal(body) {
     currentCookieBody = body;
+
+    // Fetch active projects
+    const projects = ipcRenderer.sendSync('get-projects');
+    const activeProjects = projects.filter(p => p.status === 'active');
+
+    projectSelect.innerHTML = '';
+
+    if (activeProjects.length === 0) {
+        projectSelect.style.display = 'none';
+        noProjectsMsg.classList.remove('hidden');
+        saveBtn.disabled = true;
+        saveBtn.style.opacity = 0.5;
+    } else {
+        projectSelect.style.display = 'block';
+        noProjectsMsg.classList.add('hidden');
+        saveBtn.disabled = false;
+        saveBtn.style.opacity = 1;
+
+        activeProjects.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.id;
+            option.text = p.name;
+            projectSelect.appendChild(option);
+        });
+    }
+
     modal.classList.remove('hidden');
     noteInput.value = '';
-    tagInput.value = '';
     noteInput.focus();
     isModalOpen = true;
 
@@ -460,49 +504,26 @@ function showNoteModal(body) {
     ipcRenderer.send('set-ignore-mouse-events', false);
 }
 
-function checkForMerges() {
-    const bodies = Composite.allBodies(world);
-    const savedBodies = bodies.filter(b => b.label === 'cookie-saved');
-
-    // Group by level
-    const byLevel = {};
-    savedBodies.forEach(b => {
-        const lvl = b.level || 1;
-        if (!byLevel[lvl]) byLevel[lvl] = [];
-        byLevel[lvl].push(b);
-    });
-
-    // Check for groups of 5
-    for (const lvlStr in byLevel) {
-        const lvl = parseInt(lvlStr);
-        const group = byLevel[lvl];
-        if (group.length >= 5) {
-            // Merge 5
-            const toRemove = group.slice(0, 5);
-            const centerBody = toRemove[0]; // Spawn new one at location of first
-
-            // Remove from world
-            toRemove.forEach(b => Composite.remove(world, b));
-
-            // Spawn next level
-            spawnCookie(centerBody.position.x, centerBody.position.y, true, lvl + 1);
-
-            // Recurse in case we triggered another merge
-            setTimeout(checkForMerges, 500);
-            return; // Handle one merge at a time
-        }
+openManagerLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    ipcRenderer.send('open-stats');
+    modal.classList.add('hidden');
+    isModalOpen = false;
+    if (currentCookieBody) {
+        currentCookieBody.label = 'cookie-new'; // Reset so it triggers again
     }
-}
+});
 
 saveBtn.addEventListener('click', () => {
-    if (currentCookieBody) {
+    if (currentCookieBody && !saveBtn.disabled) {
         const note = noteInput.value;
-        const tags = tagInput.value;
+        const projectId = projectSelect.value;
 
         ipcRenderer.send('save-cookie', {
+            projectId,
             note,
-            tags,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            level: 1
         });
 
         currentCookieBody.label = 'cookie-saved';
@@ -512,9 +533,6 @@ saveBtn.addEventListener('click', () => {
         const levelConfig = COOKIE_LEVELS[0];
 
         // We need to update the body radius and texture
-        // Matter.js bodies are immutable in shape usually, but we can scale
-        // Or just replace the texture if size is same.
-        // Raw radius is 16, Level 1 radius is 16. So size is same.
         currentCookieBody.render.sprite.texture = levelConfig.texture;
 
         modal.classList.add('hidden');
