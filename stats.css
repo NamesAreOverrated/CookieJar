@@ -1,15 +1,15 @@
 :root {
     --primary-color: #6c5ce7;
     --secondary-color: #a29bfe;
-    --bg-color: #dfe6e9;
-    --sidebar-bg: #2d3436;
-    --sidebar-text: #dfe6e9;
-    --card-bg: #ffffff;
-    --text-color: #2d3436;
-    --text-muted: #636e72;
+    --bg-color: #1e1e1e;
+    --sidebar-bg: #121212;
+    --sidebar-text: #ecf0f1;
+    --card-bg: #2d3436;
+    --text-color: #ecf0f1;
+    --text-muted: #bdc3c7;
     --danger-color: #ff7675;
-    --success-color: #55efc4;
-    --warning-color: #ffeaa7;
+    --success-color: #00b894;
+    --warning-color: #fdcb6e;
 }
 
 body {
@@ -160,23 +160,23 @@ h3 {
     width: 12px;
     height: 12px;
     border-radius: 2px;
-    background-color: #ebedf0;
+    background-color: #161b22;
 }
 
 .heatmap-cell[data-level="1"] {
-    background-color: #9be9a8;
+    background-color: #0e4429;
 }
 
 .heatmap-cell[data-level="2"] {
-    background-color: #40c463;
+    background-color: #006d32;
 }
 
 .heatmap-cell[data-level="3"] {
-    background-color: #30a14e;
+    background-color: #26a641;
 }
 
 .heatmap-cell[data-level="4"] {
-    background-color: #216e39;
+    background-color: #39d353;
 }
 
 .heatmap-months {
@@ -232,7 +232,7 @@ h3 {
 }
 
 .btn-icon:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.1);
     opacity: 1;
 }
 
@@ -250,8 +250,8 @@ h3 {
 
 .tag-pill {
     display: inline-block;
-    background: #e0f7fa;
-    color: #006064;
+    background: rgba(108, 92, 231, 0.2);
+    color: #a29bfe;
     padding: 4px 10px;
     border-radius: 15px;
     font-size: 0.8rem;
@@ -268,13 +268,13 @@ h3 {
 }
 
 .tag-chip {
-    background: white;
+    background: var(--card-bg);
     padding: 8px 16px;
     border-radius: 20px;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     transition: all 0.2s;
-    border: 1px solid transparent;
+    border: 1px solid #444;
 }
 
 .tag-chip:hover,
@@ -285,7 +285,7 @@ h3 {
 }
 
 .tag-count {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.1);
     padding: 2px 6px;
     border-radius: 10px;
     font-size: 0.8em;
@@ -333,7 +333,7 @@ h3 {
 }
 
 .btn-secondary {
-    background: #b2bec3;
+    background: #636e72;
     color: white;
 }
 
@@ -354,21 +354,23 @@ h3 {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     display: none;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(4px);
 }
 
 .modal-content {
-    background: white;
+    background: var(--card-bg);
     padding: 30px;
     border-radius: 12px;
     width: 500px;
     max-width: 90%;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    color: var(--text-color);
+    border: 1px solid #444;
 }
 
 .form-group {
@@ -379,16 +381,27 @@ h3 {
     display: block;
     margin-bottom: 5px;
     font-weight: 600;
+    color: var(--text-muted);
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+input[type="text"] {
     width: 100%;
     padding: 10px;
-    border: 1px solid #dfe6e9;
+    border: 1px solid #444;
     border-radius: 6px;
     box-sizing: border-box;
     font-family: inherit;
+    background: #1e1e1e;
+    color: var(--text-color);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+input[type="text"]:focus {
+    border-color: var(--primary-color);
+    outline: none;
 }
 
 /* Breadcrumb for Drilldown */
@@ -414,10 +427,10 @@ h3 {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #b2bec3;
+    background: #636e72;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #636e72;
+    background: #b2bec3;
 }

@@ -27,7 +27,7 @@ function generateCookieTexture(level, radius, isRaw = false) {
 
     // Base Circle
     ctx.beginPath();
-    ctx.arc(cx, cy, radius - 1, 0, Math.PI * 2); // -1 for border space
+    ctx.arc(cx, cy, radius - 2, 0, Math.PI * 2); // -2 for border space
     ctx.closePath();
 
     // Clip to circle
@@ -41,102 +41,132 @@ function generateCookieTexture(level, radius, isRaw = false) {
         grad.addColorStop(1, '#bdb76b');
         ctx.fillStyle = grad;
         ctx.fill();
+
+        addNoise(ctx, size, size);
     } else {
         // Baked & Leveled Cookies
+        const grad = ctx.createRadialGradient(cx, cy, radius * 0.2, cx, cy, radius);
+
         if (level === 1) {
             // Level 1: Classic Chocolate Chip
-            ctx.fillStyle = '#eac086'; // Golden Brown Dough
+            grad.addColorStop(0, '#eac086');
+            grad.addColorStop(1, '#c69c6d');
+            ctx.fillStyle = grad;
             ctx.fill();
+
+            addNoise(ctx, size, size);
+
             // Chips
-            ctx.fillStyle = '#3e2723';
-            for (let i = 0; i < 6; i++) {
-                const x = cx + (Math.random() - 0.5) * radius * 1.4;
-                const y = cy + (Math.random() - 0.5) * radius * 1.4;
-                const r = Math.random() * (radius * 0.2) + 2;
-                ctx.beginPath();
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.fill();
+            for (let i = 0; i < 8; i++) {
+                drawChip(ctx, cx, cy, radius, '#3e2723');
             }
         } else if (level === 2) {
-            // Level 2: White Chocolate Macadamia / Glazed
-            ctx.fillStyle = '#f5deb3';
+            // Level 2: White Chocolate Macadamia
+            grad.addColorStop(0, '#f5deb3');
+            grad.addColorStop(1, '#e0c090');
+            ctx.fillStyle = grad;
             ctx.fill();
+
+            addNoise(ctx, size, size);
+
             // White chunks
-            ctx.fillStyle = '#fffdd0';
-            for (let i = 0; i < 5; i++) {
-                const x = cx + (Math.random() - 0.5) * radius * 1.4;
-                const y = cy + (Math.random() - 0.5) * radius * 1.4;
-                const r = Math.random() * (radius * 0.25) + 2;
-                ctx.beginPath();
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.fill();
+            for (let i = 0; i < 6; i++) {
+                drawChip(ctx, cx, cy, radius, '#fffdd0');
             }
         } else if (level === 3) {
             // Level 3: Golden Cookie
-            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
             grad.addColorStop(0, '#ffd700');
             grad.addColorStop(1, '#daa520');
             ctx.fillStyle = grad;
             ctx.fill();
+
             // Shine
             ctx.beginPath();
-            ctx.arc(cx - radius * 0.3, cy - radius * 0.3, radius * 0.2, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.arc(cx - radius * 0.3, cy - radius * 0.3, radius * 0.25, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
             ctx.fill();
+
+            addNoise(ctx, size, size);
         } else if (level === 4) {
             // Level 4: Red Velvet
-            ctx.fillStyle = '#800020';
+            grad.addColorStop(0, '#a52a2a');
+            grad.addColorStop(1, '#800000');
+            ctx.fillStyle = grad;
             ctx.fill();
+
+            addNoise(ctx, size, size);
+
             // Crinkles
-            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
             ctx.lineWidth = 2;
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < 4; i++) {
                 ctx.beginPath();
                 const x1 = cx + (Math.random() - 0.5) * radius;
                 const y1 = cy + (Math.random() - 0.5) * radius;
                 ctx.moveTo(x1, y1);
-                ctx.lineTo(x1 + (Math.random() - 0.5) * 10, y1 + (Math.random() - 0.5) * 10);
+                ctx.lineTo(x1 + (Math.random() - 0.5) * 20, y1 + (Math.random() - 0.5) * 20);
                 ctx.stroke();
             }
-        } else if (level === 5) {
-            // Level 5: Cosmic / Galaxy
-            const grad = ctx.createLinearGradient(0, 0, size, size);
-            grad.addColorStop(0, '#4b0082');
-            grad.addColorStop(1, '#0000ff');
-            ctx.fillStyle = grad;
-            ctx.fill();
-            // Stars
-            ctx.fillStyle = '#ffffff';
-            for (let i = 0; i < 8; i++) {
-                const x = Math.random() * size;
-                const y = Math.random() * size;
-                const r = Math.random() * 1.5;
-                ctx.beginPath();
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.fill();
+            // White Chips
+            for (let i = 0; i < 5; i++) {
+                drawChip(ctx, cx, cy, radius, '#fffdd0');
             }
         }
     }
 
-    ctx.restore(); // Remove clip
+    ctx.restore();
 
-    // Inner Shadow for 3D effect
+    // Subtle outline
     ctx.beginPath();
-    ctx.arc(cx, cy, radius - 1, 0, Math.PI * 2);
-    const grad = ctx.createRadialGradient(cx, cy, radius * 0.8, cx, cy, radius);
-    grad.addColorStop(0, 'rgba(0,0,0,0)');
-    grad.addColorStop(1, 'rgba(0,0,0,0.3)');
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Border
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius - 1, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+    ctx.arc(cx, cy, radius - 2, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
     return canvas.toDataURL();
+}
+
+function addNoise(ctx, w, h) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'overlay';
+    for (let i = 0; i < 50; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h;
+        const r = Math.random() * 2;
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    for (let i = 0; i < 50; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h;
+        const r = Math.random() * 2;
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawChip(ctx, cx, cy, radius, color) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.random() * (radius * 0.7);
+    const x = cx + Math.cos(angle) * dist;
+    const y = cy + Math.sin(angle) * dist;
+    const r = Math.random() * (radius * 0.15) + 2;
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Chip shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.arc(x + 1, y + 1, r * 0.8, 0, Math.PI * 2);
+    ctx.fill();
 }
 
 // Level Definitions

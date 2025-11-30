@@ -23,28 +23,28 @@ body {
 }
 
 #jar-back {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 0 0 20px 20px;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
     z-index: 5;
 }
 
 #jar-front {
-    border-left: 2px solid rgba(255, 255, 255, 0.5);
-    border-right: 2px solid rgba(255, 255, 255, 0.5);
-    border-bottom: 5px solid rgba(255, 255, 255, 0.6);
+    border-left: 2px solid rgba(255, 255, 255, 0.2);
+    border-right: 2px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 5px solid rgba(255, 255, 255, 0.3);
     border-radius: 0 0 20px 20px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.05) 100%);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     z-index: 15;
     /* Above canvas */
 }
 
 #plate {
-    background: #f8f8f8;
+    background: #2d3436;
     border-radius: 50%;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), inset 0 -2px 5px rgba(0, 0, 0, 0.1);
-    border: 1px solid #ddd;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), inset 0 -2px 5px rgba(0, 0, 0, 0.3);
+    border: 1px solid #444;
     z-index: 5;
 }
 
@@ -57,15 +57,16 @@ canvas {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(45, 52, 54, 0.95);
     backdrop-filter: blur(10px);
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
     z-index: 1000;
     pointer-events: auto;
     width: 320px;
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: #ecf0f1;
 }
 
 @keyframes popIn {
@@ -87,28 +88,87 @@ canvas {
 .modal-content h3 {
     margin-top: 0;
     margin-bottom: 15px;
-    color: #2d3436;
+    color: #ecf0f1;
     font-size: 1.2rem;
     text-align: center;
 }
 
 .modal-content label {
     font-size: 0.9rem;
-    color: #636e72;
+    color: #bdc3c7;
     margin-bottom: 5px;
     display: block;
 }
 
+/* Dark Theme Inputs */
+input[type="text"],
+select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #ecf0f1;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+select:focus {
+    border-color: #6c5ce7;
+}
+
+/* Dark Theme Button */
+button#save-btn {
+    width: 100%;
+    padding: 10px;
+    background: #6c5ce7;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s, background-color 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+button#save-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+    background: #5b4cc4;
+}
+
+button#save-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Link style */
+a {
+    color: #a29bfe;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Removed conflicting light theme styles */
 .modal-content input,
 .modal-content select {
     width: 100%;
     padding: 10px;
     margin-bottom: 15px;
     box-sizing: border-box;
-    border: 1px solid #dfe6e9;
+    border: 1px solid #444;
     border-radius: 8px;
     font-family: inherit;
-    background: #f5f6fa;
+    background: #1e1e1e;
+    color: #ecf0f1;
     transition: border-color 0.2s;
 }
 
@@ -116,35 +176,51 @@ canvas {
 .modal-content select:focus {
     outline: none;
     border-color: #6c5ce7;
-    background: white;
+    background: #1e1e1e;
+}
+
+/* Ensure options are dark */
+option {
+    background: #1e1e1e;
+    color: #ecf0f1;
 }
 
 .modal-content button {
     width: 100%;
     padding: 12px;
-    background-color: #6c5ce7;
+    background: #6c5ce7;
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
-    transition: transform 0.1s, background-color 0.2s;
+    transition: transform 0.1s, box-shadow 0.2s, background-color 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 .modal-content button:hover {
-    background-color: #5b4cc4;
     transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
+    background: #5b4cc4;
 }
 
 .modal-content button:active {
     transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .modal-content a {
-    color: #6c5ce7;
+    color: #a29bfe;
     text-decoration: none;
 }
 
 .modal-content a:hover {
     text-decoration: underline;
+}
+
+#no-projects-msg {
+    color: #ff7675;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    text-align: center;
 }
