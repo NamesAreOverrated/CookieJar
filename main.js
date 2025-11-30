@@ -43,6 +43,8 @@ function createStatsWindow() {
     statsWindow = new BrowserWindow({
         width: 800,
         height: 600,
+        frame: false, // Hide native border
+        show: false, // Don't show until ready to avoid blank screen
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -50,6 +52,10 @@ function createStatsWindow() {
     });
 
     statsWindow.loadFile('stats.html');
+
+    statsWindow.once('ready-to-show', () => {
+        statsWindow.show();
+    });
 
     statsWindow.on('closed', () => {
         statsWindow = null;

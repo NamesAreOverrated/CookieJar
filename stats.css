@@ -40,6 +40,8 @@ body {
     font-weight: bold;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     margin-bottom: 10px;
+    -webkit-app-region: drag;
+    /* Make draggable */
 }
 
 .nav-item {
@@ -104,6 +106,8 @@ h3 {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    -webkit-app-region: drag;
+    /* Make draggable */
 }
 
 /* Cards */
@@ -419,7 +423,8 @@ input[type="text"]:focus {
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -427,10 +432,10 @@ input[type="text"]:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #636e72;
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #b2bec3;
+    background: rgba(255, 255, 255, 0.3);
 }

@@ -65,6 +65,14 @@ function setupEventListeners() {
     // Modals
     document.getElementById('modal-close-btn').addEventListener('click', closeModal);
     document.getElementById('modal-save-btn').addEventListener('click', handleSave);
+
+    // Window Controls
+    const closeBtn = document.getElementById('win-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            window.close();
+        });
+    }
 }
 
 function showPage(pageId) {
@@ -483,4 +491,12 @@ function deleteCookie(id) {
 }
 
 // Start
-init();
+window.addEventListener('DOMContentLoaded', () => {
+    init();
+    // Force a layout update just in case
+    setTimeout(() => {
+        document.body.style.display = 'none';
+        document.body.offsetHeight; // trigger reflow
+        document.body.style.display = 'flex';
+    }, 50);
+});
