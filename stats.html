@@ -3,515 +3,125 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Cookie Jar Management</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            padding: 0;
-            margin: 0;
-            background: #f5f7fa;
-            color: #333;
-            display: flex;
-            height: 100vh;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 250px;
-            background: #2c3e50;
-            color: white;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            font-size: 1.2em;
-            font-weight: bold;
-            border-bottom: 1px solid #34495e;
-        }
-
-        .nav-item {
-            padding: 15px 20px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .nav-item:hover {
-            background: #34495e;
-        }
-
-        .nav-item.active {
-            background: #3498db;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-        }
-
-        .page {
-            display: none;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        h1 {
-            margin-top: 0;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 10px;
-        }
-
-        /* Projects List */
-        .project-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .project-info h3 {
-            margin: 0 0 5px 0;
-        }
-
-        .project-tags span {
-            background: #e0f7fa;
-            color: #006064;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            margin-right: 5px;
-        }
-
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-
-        .btn-danger {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #95a5a6;
-            color: white;
-        }
-
-        /* Form */
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        /* Stats List */
-        .cookie-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .cookie-item {
-            background: white;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            display: flex;
-            align-items: center;
-        }
-
-        .cookie-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-        }
-
-        .cookie-details {
-            flex: 1;
-        }
-
-        .cookie-meta {
-            font-size: 0.85em;
-            color: #7f8c8d;
-            margin-top: 4px;
-        }
-
-        .level-1 {
-            background: #D2691E;
-        }
-
-        .level-2 {
-            background: #C0C0C0;
-        }
-
-        .level-3 {
-            background: #FFD700;
-        }
-
-        .level-4 {
-            background: #E5E4E2;
-        }
-
-        .level-5 {
-            background: #00BFFF;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
-
-        /* Modal */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 400px;
-            max-width: 90%;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .cookie-actions {
-            margin-left: 10px;
-            display: flex;
-            gap: 5px;
-        }
-    </style>
+    <title>Cookie Jar Stats</title>
+    <link rel="stylesheet" href="stats.css">
 </head>
 
 <body>
     <div class="sidebar">
         <div class="sidebar-header">Cookie Jar</div>
-        <div class="nav-item active" onclick="showPage('dashboard')">Dashboard</div>
-        <div class="nav-item" onclick="showPage('projects')">Projects</div>
+        <div class="nav-item active" id="nav-dashboard">
+            <span>📊</span> Dashboard
+        </div>
+        <div class="nav-item" id="nav-projects">
+            <span>📁</span> Projects
+        </div>
     </div>
 
     <div class="main-content">
-        <!-- Dashboard Page -->
+        <!-- Dashboard -->
         <div id="dashboard" class="page active">
-            <h1>Your Achievements</h1>
-            <div id="stats-summary" style="margin-bottom: 20px; font-size: 1.1em;"></div>
-            <ul class="cookie-list" id="cookie-list"></ul>
-        </div>
-
-        <!-- Projects Page -->
-        <div id="projects" class="page">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>Projects</h1>
-                <button class="btn btn-primary" onclick="showProjectForm()">+ New Project</button>
+            <div class="header-row">
+                <h1>Dashboard</h1>
             </div>
 
-            <div id="projects-list"></div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-cookies">0</div>
+                    <div class="stat-label">Total Cookies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="active-projects">0</div>
+                    <div class="stat-label">Active Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-days">0</div>
+                    <div class="stat-label">Days Active</div>
+                </div>
+            </div>
 
-            <h2 style="margin-top: 40px; color: #7f8c8d;">Archived</h2>
-            <div id="archived-projects-list"></div>
+            <div class="card">
+                <h3>Activity Heatmap (Last Year)</h3>
+                <div class="heatmap-container">
+                    <div class="heatmap-months">
+                        <span>Less</span>
+                        <div style="display:flex; gap:3px;">
+                            <div class="heatmap-cell" style="background:#ebedf0"></div>
+                            <div class="heatmap-cell" style="background:#9be9a8"></div>
+                            <div class="heatmap-cell" style="background:#40c463"></div>
+                            <div class="heatmap-cell" style="background:#30a14e"></div>
+                            <div class="heatmap-cell" style="background:#216e39"></div>
+                        </div>
+                        <span>More</span>
+                    </div>
+                    <div class="heatmap-grid" id="heatmap-grid"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Recent Activity</h3>
+                <div id="recent-activity-list"></div>
+            </div>
+        </div>
+
+        <!-- Projects -->
+        <div id="projects" class="page">
+            <div class="header-row">
+                <h1>Projects</h1>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="card" style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <input type="text" id="project-search" placeholder="Search projects..."
+                    style="padding: 10px; border: 1px solid #dfe6e9; border-radius: 6px; width: 100%; box-sizing: border-box;">
+                <div id="project-tags-filter" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;">
+                    <!-- Tags will be injected here -->
+                </div>
+            </div>
+
+            <div class="projects-grid" id="projects-grid"></div>
+        </div>
+
+        <!-- Project Details (Drill-down) -->
+        <div id="project-details" class="page">
+            <div class="breadcrumb" onclick="backToProjects()">← Back to Projects</div>
+
+            <div class="header-row">
+                <h1 id="pd-name">Project Name</h1>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" id="pd-edit-btn">Edit</button>
+                    <button class="btn btn-secondary" id="pd-archive-btn">Archive</button>
+                    <button class="btn btn-danger" id="pd-delete-btn">Delete</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div id="pd-tags" style="margin-bottom:15px;"></div>
+                <div style="font-size:1.2rem;">
+                    Total Cookies: <strong id="pd-count" style="color:var(--primary-color)">0</strong>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>History</h3>
+                <div id="pd-cookie-list"></div>
+            </div>
         </div>
     </div>
 
-    <!-- Generic Modal -->
+    <!-- Edit Modal -->
     <div id="edit-modal" class="modal">
         <div class="modal-content">
             <h3 id="modal-title">Edit</h3>
             <div id="modal-body"></div>
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <div class="modal-buttons" style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button class="btn btn-secondary" id="modal-close-btn">Cancel</button>
                 <button class="btn btn-primary" id="modal-save-btn">Save</button>
             </div>
         </div>
     </div>
 
-    <script>
-        const { ipcRenderer } = require('electron');
-
-        // State
-        let projects = [];
-        let cookies = [];
-        let editingId = null;
-
-        function loadData() {
-            projects = ipcRenderer.sendSync('get-projects');
-            cookies = ipcRenderer.sendSync('get-cookies');
-
-            renderProjects();
-            renderDashboard();
-        }
-
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(pageId).classList.add('active');
-            // Fix active class on nav item
-            const navItems = document.querySelectorAll('.nav-item');
-            if (pageId === 'dashboard') navItems[0].classList.add('active');
-            if (pageId === 'projects') navItems[1].classList.add('active');
-        }
-
-        // --- Modal Logic ---
-        function closeModal() {
-            document.getElementById('edit-modal').style.display = 'none';
-            editingId = null;
-        }
-
-        // --- Projects Logic ---
-        function showProjectForm(project = null) {
-            const modal = document.getElementById('edit-modal');
-            const title = document.getElementById('modal-title');
-            const body = document.getElementById('modal-body');
-            const saveBtn = document.getElementById('modal-save-btn');
-
-            editingId = project ? project.id : null;
-            title.innerText = project ? 'Edit Project' : 'New Project';
-
-            body.innerHTML = `
-                <div class="form-group">
-                    <label>Project Name</label>
-                    <input type="text" id="project-name" value="${project ? project.name : ''}" placeholder="e.g. Learn Piano">
-                </div>
-                <div class="form-group">
-                    <label>Tags (comma separated)</label>
-                    <input type="text" id="project-tags" value="${project ? (project.tags || []).join(', ') : ''}" placeholder="e.g. music, hobby">
-                </div>
-            `;
-
-            saveBtn.onclick = () => saveProject();
-            modal.style.display = 'flex';
-            document.getElementById('project-name').focus();
-        }
-
-        function saveProject() {
-            const name = document.getElementById('project-name').value;
-            const tagsStr = document.getElementById('project-tags').value;
-
-            if (!name) return alert('Project name is required');
-
-            const tags = tagsStr.split(',').map(t => t.trim()).filter(t => t);
-
-            const payload = { name, tags };
-            if (editingId) payload.id = editingId;
-
-            const result = ipcRenderer.sendSync('save-project', payload);
-
-            if (result.success) {
-                loadData();
-                closeModal();
-            } else {
-                alert(result.error || 'Error saving project');
-            }
-        }
-
-        function toggleArchive(id, isArchived) {
-            if (isArchived) {
-                ipcRenderer.sendSync('activate-project', id);
-            } else {
-                ipcRenderer.sendSync('archive-project', id);
-            }
-            loadData();
-        }
-
-        function renderProjects() {
-            const activeList = document.getElementById('projects-list');
-            const archivedList = document.getElementById('archived-projects-list');
-            activeList.innerHTML = '';
-            archivedList.innerHTML = '';
-
-            projects.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'project-card';
-
-                const tagsHtml = (p.tags || []).map(t => `<span>#${t}</span>`).join('');
-
-                // Escape quotes for JSON
-                const pStr = JSON.stringify(p).replace(/'/g, "&#39;");
-
-                div.innerHTML = `
-                    <div class="project-info">
-                        <h3>${p.name}</h3>
-                        <div class="project-tags">${tagsHtml}</div>
-                    </div>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn btn-secondary" onclick='showProjectForm(${pStr})'>Edit</button>
-                        <button class="btn ${p.status === 'active' ? 'btn-danger' : 'btn-secondary'}" 
-                                onclick="toggleArchive('${p.id}', ${p.status === 'archived'})">
-                            ${p.status === 'active' ? 'Archive' : 'Restore'}
-                        </button>
-                    </div>
-                `;
-
-                if (p.status === 'active') {
-                    activeList.appendChild(div);
-                } else {
-                    archivedList.appendChild(div);
-                }
-            });
-
-            if (activeList.children.length === 0) activeList.innerHTML = '<div class="empty-state">No active projects. Create one to start collecting cookies!</div>';
-        }
-
-        // --- Cookie Logic ---
-        function showCookieForm(cookie) {
-            const modal = document.getElementById('edit-modal');
-            const title = document.getElementById('modal-title');
-            const body = document.getElementById('modal-body');
-            const saveBtn = document.getElementById('modal-save-btn');
-
-            editingId = cookie.id;
-            title.innerText = 'Edit Cookie';
-
-            // Project options
-            const projectOptions = projects.map(p =>
-                `<option value="${p.id}" ${p.id === cookie.projectId ? 'selected' : ''}>${p.name} ${p.status === 'archived' ? '(Archived)' : ''}</option>`
-            ).join('');
-
-            body.innerHTML = `
-                <div class="form-group">
-                    <label>Project</label>
-                    <select id="cookie-project">
-                        ${projectOptions}
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Note</label>
-                    <input type="text" id="cookie-note" value="${cookie.note || ''}">
-                </div>
-                <div class="form-group">
-                    <label>Timestamp (Read-only)</label>
-                    <input type="text" value="${new Date(cookie.timestamp).toLocaleString()}" disabled style="background:#eee;">
-                </div>
-            `;
-
-            saveBtn.onclick = () => saveCookie();
-            modal.style.display = 'flex';
-        }
-
-        function saveCookie() {
-            const projectId = document.getElementById('cookie-project').value;
-            const note = document.getElementById('cookie-note').value;
-
-            const result = ipcRenderer.sendSync('update-cookie', {
-                id: editingId,
-                projectId,
-                note
-            });
-
-            if (result) {
-                loadData();
-                closeModal();
-            } else {
-                alert('Error updating cookie');
-            }
-        }
-
-        function deleteCookie(id) {
-            if (confirm('Are you sure you want to delete this cookie? It will be removed from the jar immediately.')) {
-                const result = ipcRenderer.sendSync('delete-cookie', id);
-                if (result) {
-                    loadData();
-                } else {
-                    alert('Error deleting cookie');
-                }
-            }
-        }
-
-        function renderDashboard() {
-            const list = document.getElementById('cookie-list');
-            const summary = document.getElementById('stats-summary');
-            list.innerHTML = '';
-
-            summary.innerText = `Total Cookies Collected: ${cookies.length}`;
-
-            if (cookies.length === 0) {
-                list.innerHTML = '<div class="empty-state">No cookies yet. Throw some in the jar!</div>';
-                return;
-            }
-
-            // Sort by date desc
-            const sortedCookies = [...cookies].reverse();
-
-            sortedCookies.forEach(c => {
-                const project = projects.find(p => p.id === c.projectId);
-                const projectName = project ? project.name : 'Unknown Project';
-                const date = new Date(c.timestamp).toLocaleString();
-                const level = c.level || 1;
-
-                // Safe stringify for onclick
-                const cookieStr = JSON.stringify(c).replace(/'/g, "&#39;");
-
-                const li = document.createElement('li');
-                li.className = 'cookie-item';
-                li.innerHTML = `
-                    <div class="cookie-icon level-${level}">${level}</div>
-                    <div class="cookie-details">
-                        <div style="font-weight: bold;">${projectName}</div>
-                        <div>${c.note || 'No note'}</div>
-                        <div class="cookie-meta">${date}</div>
-                    </div>
-                    <div class="cookie-actions">
-                        <button class="btn btn-secondary" onclick='showCookieForm(${cookieStr})'>Edit</button>
-                        <button class="btn btn-danger" onclick="deleteCookie('${c.id}')">Delete</button>
-                    </div>
-                `;
-                list.appendChild(li);
-            });
-        }
-
-        // Init
-        loadData();
-    </script>
+    <script src="stats.js"></script>
 </body>
 
 </html>

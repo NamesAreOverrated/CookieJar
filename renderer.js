@@ -456,6 +456,10 @@ ipcRenderer.on('cookie-deleted', (event, cookie) => {
     refreshJar();
 });
 
+ipcRenderer.on('refresh-jar', () => {
+    refreshJar();
+});
+
 // --- UI Logic ---
 const modal = document.getElementById('note-modal');
 const noteInput = document.getElementById('note-input');
@@ -519,7 +523,7 @@ saveBtn.addEventListener('click', () => {
         const note = noteInput.value;
         const projectId = projectSelect.value;
 
-        ipcRenderer.send('save-cookie', {
+        ipcRenderer.sendSync('save-cookie', {
             projectId,
             note,
             timestamp: Date.now(),
@@ -552,3 +556,7 @@ window.addEventListener('resize', () => {
     // But we should update UI positions if we did
     updateUiPositions();
 });
+
+function checkForMerges() {
+    refreshJar();
+}

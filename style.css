@@ -57,14 +57,27 @@ canvas {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5);
     z-index: 1000;
     pointer-events: auto;
-    /* Modal needs interaction */
-    width: 300px;
+    width: 320px;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -40%) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 .hidden {
@@ -73,25 +86,65 @@ canvas {
 
 .modal-content h3 {
     margin-top: 0;
+    margin-bottom: 15px;
+    color: #2d3436;
+    font-size: 1.2rem;
+    text-align: center;
 }
 
-.modal-content input {
+.modal-content label {
+    font-size: 0.9rem;
+    color: #636e72;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.modal-content input,
+.modal-content select {
     width: 100%;
-    padding: 8px;
-    margin: 10px 0;
+    padding: 10px;
+    margin-bottom: 15px;
     box-sizing: border-box;
+    border: 1px solid #dfe6e9;
+    border-radius: 8px;
+    font-family: inherit;
+    background: #f5f6fa;
+    transition: border-color 0.2s;
+}
+
+.modal-content input:focus,
+.modal-content select:focus {
+    outline: none;
+    border-color: #6c5ce7;
+    background: white;
 }
 
 .modal-content button {
     width: 100%;
-    padding: 10px;
-    background-color: #8b4513;
+    padding: 12px;
+    background-color: #6c5ce7;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.1s, background-color 0.2s;
 }
 
 .modal-content button:hover {
-    background-color: #a0522d;
+    background-color: #5b4cc4;
+    transform: translateY(-1px);
+}
+
+.modal-content button:active {
+    transform: translateY(1px);
+}
+
+.modal-content a {
+    color: #6c5ce7;
+    text-decoration: none;
+}
+
+.modal-content a:hover {
+    text-decoration: underline;
 }

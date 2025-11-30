@@ -101,6 +101,8 @@ ipcMain.on('save-cookie', (event, cookieData) => {
     cookieData.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
     cookies.push(cookieData);
     store.set('cookies', cookies);
+    if (statsWindow) statsWindow.webContents.send('data-changed');
+    event.returnValue = true;
 });
 
 ipcMain.on('update-cookie', (event, updatedCookie) => {
@@ -112,6 +114,7 @@ ipcMain.on('update-cookie', (event, updatedCookie) => {
         updatedCookie.timestamp = cookies[index].timestamp;
         cookies[index] = { ...cookies[index], ...updatedCookie };
         store.set('cookies', cookies);
+        if (statsWindow) statsWindow.webContents.send('data-changed');
         event.returnValue = true;
     } else {
         event.returnValue = false;
@@ -129,6 +132,7 @@ ipcMain.on('delete-cookie', (event, cookieId) => {
         if (mainWindow) {
             mainWindow.webContents.send('cookie-deleted', cookieToDelete);
         }
+        if (statsWindow) statsWindow.webContents.send('data-changed');
         event.returnValue = true;
     } else {
         event.returnValue = false;
@@ -153,6 +157,7 @@ ipcMain.on('update-project', (event, updatedProject) => {
     if (index !== -1) {
         projects[index] = { ...projects[index], ...updatedProject };
         store.set('projects', projects);
+        if (statsWindow) statsWindow.webContents.send('data-changed');
         event.returnValue = { success: true };
     } else {
         event.returnValue = { success: false, error: 'Project not found' };
@@ -192,6 +197,7 @@ ipcMain.on('save-project', (event, project) => {
         projects.push(project);
     }
     store.set('projects', projects);
+    if (statsWindow) statsWindow.webContents.send('data-changed');
     event.returnValue = { success: true, project };
 }); ipcMain.on('archive-project', (event, projectId) => {
     const projects = store.get('projects', []);
@@ -199,6 +205,7 @@ ipcMain.on('save-project', (event, project) => {
     if (index !== -1) {
         projects[index].status = 'archived';
         store.set('projects', projects);
+        if (statsWindow) statsWindow.webContents.send('data-changed');
     }
     event.returnValue = true;
 });
@@ -209,6 +216,38 @@ ipcMain.on('activate-project', (event, projectId) => {
     if (index !== -1) {
         projects[index].status = 'active';
         store.set('projects', projects);
+        if (statsWindow) statsWindow.webContents.send('data-changed');
     }
     event.returnValue = true;
+});
+
+ipcMain.on('delete-project', (event, projectId) => {
+    let projects = store.get('projects', []);
+    const projectIndex = projects.findIndex(p => p.id === projectId);
+
+    if (projectIndex !== -1) {
+        // Remove project
+        projects.splice(projectIndex, 1);
+        store.set('projects', projects);
+
+        // Remove associated cookies
+        let cookies = store.get('cookies', []);
+        const initialCount = cookies.length;
+        cookies = cookies.filter(c => c.projectId !== projectId);
+
+        if (cookies.length !== initialCount) {
+            store.set('cookies', cookies);
+            // Notify renderer to refresh if needed (though stats window usually reloads data)
+            if (mainWindow) {
+                // We might want to trigger a refresh of the jar, but since cookies are removed from store,
+                // the next refreshJar() call or app restart will clear them.
+                // To be immediate, we can send a signal.
+                mainWindow.webContents.send('refresh-jar');
+            }
+        }
+        if (statsWindow) statsWindow.webContents.send('data-changed');
+        event.returnValue = true;
+    } else {
+        event.returnValue = false;
+    }
 });
