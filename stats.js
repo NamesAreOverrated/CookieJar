@@ -732,60 +732,39 @@ function exportLogseq() {
     }
 
     // --- Milestones ---
-    // We only care about milestones newly triggered today. For each project/tag
-    // that received at least one cookie today, compute the total (including today)
-    // and the count before today. A milestone occurs when total === 1 or total % 5 === 0
-    // and it was NOT already a milestone before today.
+    // Trigger milestones based only on today's triggered projects/tags.
+    // If a project's or tag's total (including today) is a milestone count,
+    // report it. We no longer need to compute "before today" counts.
 
     // Helper
     const isMilestoneCount = (n) => (n === 1) || (n % 5 === 0 && n > 0);
 
-    // Project counts before today
-    const projectCountsBefore = {};
-    cookies.forEach(c => {
-        const d = new Date(c.timestamp).toDateString();
-        if (d !== today) {
-            projectCountsBefore[c.projectId] = (projectCountsBefore[c.projectId] || 0) + 1;
+    // Project & Tag milestones: collect unique projects and tags from today's cookies
+    // then separately check milestone condition for each.
+    const triggeredProjectIds = new Set();
+    const triggeredTags = new Set();
+    todayCookies.forEach(c => {
+        triggeredProjectIds.add(c.projectId);
+        const proj = projects.find(p => p.id === c.projectId);
+        if (proj && proj.tags && proj.tags.length) {
+            proj.tags.forEach(t => triggeredTags.add(t));
         }
     });
 
-    // Tag counts before today
-    const tagCountsBefore = {};
-    cookies.forEach(c => {
-        const d = new Date(c.timestamp).toDateString();
-        if (d !== today) {
-            const proj = projects.find(p => p.id === c.projectId);
-            if (proj && proj.tags && proj.tags.length) {
-                proj.tags.forEach(t => { tagCountsBefore[t] = (tagCountsBefore[t] || 0) + 1; });
-            }
-        }
-    });
-
-    // Project milestones: consider projects that had cookies today
-    const triggeredProjectIds = new Set(Object.keys(todayProjectCounts));
+    // Project milestones
     triggeredProjectIds.forEach(pid => {
         const total = projectCounts[pid] || 0;
-        const before = projectCountsBefore[pid] || 0;
-        if (isMilestoneCount(total) && !isMilestoneCount(before)) {
+        if (isMilestoneCount(total)) {
             const proj = projects.find(p => p.id === pid);
             const name = proj ? proj.name : pid;
             text += `    - 🏁 [[${name}]] reached ${total} cookies\n`;
         }
     });
 
-    // Tag milestones: compute tags that appeared on today's cookies
-    const tagCountsToday = {};
-    todayCookies.forEach(c => {
-        const proj = projects.find(p => p.id === c.projectId);
-        if (proj && proj.tags && proj.tags.length) {
-            proj.tags.forEach(t => { tagCountsToday[t] = (tagCountsToday[t] || 0) + 1; });
-        }
-    });
-
-    Object.keys(tagCountsToday).sort().forEach(tag => {
+    // Tag milestones
+    Array.from(triggeredTags).sort().forEach(tag => {
         const total = tagCounts[tag] || 0;
-        const before = tagCountsBefore[tag] || 0;
-        if (isMilestoneCount(total) && !isMilestoneCount(before)) {
+        if (isMilestoneCount(total)) {
             text += `    - ✨ #${tag} reached ${total} cookies\n`;
         }
     });
