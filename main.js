@@ -116,8 +116,6 @@ ipcMain.on('update-cookie', (event, updatedCookie) => {
     // Use loose comparison or string conversion to be safe
     const index = cookies.findIndex(c => String(c.id) === String(updatedCookie.id));
     if (index !== -1) {
-        // Preserve timestamp
-        updatedCookie.timestamp = cookies[index].timestamp;
         cookies[index] = { ...cookies[index], ...updatedCookie };
         store.set('cookies', cookies);
         if (statsWindow) statsWindow.webContents.send('data-changed');

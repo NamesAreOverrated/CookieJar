@@ -497,6 +497,7 @@ ipcRenderer.on('refresh-jar', () => {
 // --- UI Logic ---
 const modal = document.getElementById('note-modal');
 const noteInput = document.getElementById('note-input');
+const timestampInput = document.getElementById('timestamp-input');
 const projectSelect = document.getElementById('project-select');
 const saveBtn = document.getElementById('save-btn');
 const noProjectsMsg = document.getElementById('no-projects-msg');
@@ -535,6 +536,14 @@ function showNoteModal(body) {
 
     modal.classList.remove('hidden');
     noteInput.value = '';
+    // Set default timestamp to current local time
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    timestampInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
     noteInput.focus();
     isModalOpen = true;
 
@@ -556,11 +565,13 @@ saveBtn.addEventListener('click', () => {
     if (currentCookieBody && !saveBtn.disabled) {
         const note = noteInput.value;
         const projectId = projectSelect.value;
+        const timestampStr = timestampInput.value;
+        const timestamp = timestampStr ? new Date(timestampStr).getTime() : Date.now();
 
         ipcRenderer.sendSync('save-cookie', {
             projectId,
             note,
-            timestamp: Date.now(),
+            timestamp,
             level: 1
         });
 

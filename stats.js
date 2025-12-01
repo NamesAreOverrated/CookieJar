@@ -367,7 +367,7 @@ function createCookieListItem(cookie, project) {
             <div class="list-item-meta">${date}</div>
         </div>
         <div>
-            <button class="btn btn-sm btn-secondary" onclick='showCookieForm(${JSON.stringify(cookie)})'>Edit</button>
+            <button class="btn btn-sm btn-secondary" onclick='showCookieForm("${cookie.id}")'>Edit</button>
             <button class="btn btn-sm btn-danger" onclick="deleteCookie('${cookie.id}')">×</button>
         </div>
     `;
@@ -406,7 +406,10 @@ function showProjectForm(project = null) {
     document.getElementById('input-name').focus();
 }
 
-function showCookieForm(cookie) {
+function showCookieForm(cookieId) {
+    const cookie = cookies.find(c => c.id === cookieId);
+    if (!cookie) return;
+
     const modal = document.getElementById('edit-modal');
     const title = document.getElementById('modal-title');
     const body = document.getElementById('modal-body');
@@ -419,6 +422,15 @@ function showCookieForm(cookie) {
         `<option value="${p.id}" ${p.id === cookie.projectId ? 'selected' : ''}>${p.name}</option>`
     ).join('');
 
+    // Format timestamp for datetime-local input (YYYY-MM-DDTHH:MM) in local time
+    const timestamp = new Date(cookie.timestamp);
+    const year = timestamp.getFullYear();
+    const month = String(timestamp.getMonth() + 1).padStart(2, '0');
+    const day = String(timestamp.getDate()).padStart(2, '0');
+    const hours = String(timestamp.getHours()).padStart(2, '0');
+    const minutes = String(timestamp.getMinutes()).padStart(2, '0');
+    const formattedTimestamp = `${year}-${month}-${day}T${hours}:${minutes}`;
+
     body.innerHTML = `
         <div class="form-group">
             <label>Project</label>
@@ -426,7 +438,11 @@ function showCookieForm(cookie) {
         </div>
         <div class="form-group">
             <label>Note</label>
-            <input type="text" id="input-note" value="${cookie.note || ''}">
+            <input type="text" id="input-note" value="${(cookie.note || '').replace(/"/g, '&quot;')}">
+        </div>
+        <div class="form-group">
+            <label>Timestamp</label>
+            <input type="datetime-local" id="input-timestamp" value="${formattedTimestamp}">
         </div>
     `;
 
@@ -451,11 +467,16 @@ function handleSave() {
     } else if (type === 'cookie') {
         const projectId = document.getElementById('input-project').value;
         const note = document.getElementById('input-note').value;
+        const timestampStr = document.getElementById('input-timestamp').value;
+
+        // Convert datetime-local to timestamp
+        const timestamp = timestampStr ? new Date(timestampStr).getTime() : Date.now();
 
         ipcRenderer.sendSync('update-cookie', {
             id: editingId,
             projectId,
-            note
+            note,
+            timestamp
         });
     }
 
