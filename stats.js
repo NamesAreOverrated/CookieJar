@@ -5,6 +5,7 @@ const path = require('path');
 // State
 let projects = [];
 let cookies = [];
+let projectStats = {};
 let editingId = null;
 let currentView = 'dashboard';
 let activeTagFilter = null;
@@ -44,6 +45,18 @@ ipcRenderer.on('data-changed', () => {
 function loadData() {
     projects = ipcRenderer.sendSync('get-projects');
     cookies = ipcRenderer.sendSync('get-cookies');
+
+    // Compute project stats for performance
+    projectStats = {};
+    cookies.forEach(c => {
+        if (!projectStats[c.projectId]) {
+            projectStats[c.projectId] = { cookieCount: 0, lastActive: 0 };
+        }
+        projectStats[c.projectId].cookieCount++;
+        if (c.timestamp > projectStats[c.projectId].lastActive) {
+            projectStats[c.projectId].lastActive = c.timestamp;
+        }
+    });
 
     if (currentView === 'dashboard') renderDashboard();
     if (currentView === 'projects') renderProjects(activeTagFilter);
@@ -262,10 +275,8 @@ function renderProjects(filterTag = null, searchQuery = '') {
         card.className = 'project-card';
         if (p.status === 'archived') card.style.opacity = 0.6;
 
-        const projectCookies = cookies.filter(c => c.projectId === p.id);
-        const lastActive = projectCookies.length > 0
-            ? new Date(Math.max(...projectCookies.map(c => c.timestamp))).toLocaleDateString()
-            : 'Never';
+        const stats = projectStats[p.id] || { cookieCount: 0, lastActive: 0 };
+        const lastActive = stats.lastActive ? new Date(stats.lastActive).toLocaleDateString() : 'Never';
 
         // Stop propagation for buttons
         const tagsHtml = (p.tags || []).map(t => `<span class="tag-pill">#${t}</span>`).join('');
@@ -278,7 +289,7 @@ function renderProjects(filterTag = null, searchQuery = '') {
                 ${tagsHtml}
             </div>
             <div class="project-stats">
-                <span>🍪 ${projectCookies.length}</span>
+                <span>🍪 ${stats.cookieCount}</span>
                 <span>🕒 ${lastActive}</span>
             </div>
         `;
@@ -326,8 +337,8 @@ function openProjectDetails(project) {
     document.getElementById('pd-tags').innerHTML = (project.tags || []).map(t => `<span class="tag-pill">#${t}</span>`).join('');
 
     // Stats
-    const projectCookies = cookies.filter(c => c.projectId === project.id).sort((a, b) => b.timestamp - a.timestamp);
-    document.getElementById('pd-count').innerText = projectCookies.length;
+    const stats = projectStats[project.id] || { cookieCount: 0, lastActive: 0 };
+    document.getElementById('pd-count').innerText = stats.cookieCount;
 
     // Actions
     const editBtn = document.getElementById('pd-edit-btn');
@@ -341,6 +352,7 @@ function openProjectDetails(project) {
     deleteBtn.onclick = () => deleteProject(project.id);
 
     // List
+    const projectCookies = cookies.filter(c => c.projectId === project.id).sort((a, b) => b.timestamp - a.timestamp);
     const list = document.getElementById('pd-cookie-list');
     list.innerHTML = '';
     projectCookies.forEach(c => {
