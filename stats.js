@@ -592,7 +592,61 @@ function exportLogseq() {
         return;
     }
 
+    // --- Prepare stats for achievements ---
+    const totalCookies = cookies.length;
+
+    // Project counts (total)
+    const projectCounts = {};
+    cookies.forEach(c => { projectCounts[c.projectId] = (projectCounts[c.projectId] || 0) + 1; });
+
+    // Tag counts (map tags to cookie counts)
+    const tagCounts = {};
+    cookies.forEach(c => {
+        const proj = projects.find(p => p.id === c.projectId);
+        if (proj && proj.tags && proj.tags.length) {
+            proj.tags.forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
+        }
+    });
+
+    // Daily counts (for record checks)
+    const dailyCounts = {};
+    cookies.forEach(c => {
+        const d = new Date(c.timestamp).toDateString();
+        dailyCounts[d] = (dailyCounts[d] || 0) + 1;
+    });
+
+    const todayCount = todayCookies.length;
+    let prevBest = 0;
+    Object.keys(dailyCounts).forEach(d => { if (d !== today) prevBest = Math.max(prevBest, dailyCounts[d]); });
+    const isNewRecord = todayCount > prevBest;
+
+    // Top project today
+    const todayProjectCounts = {};
+    todayCookies.forEach(c => { todayProjectCounts[c.projectId] = (todayProjectCounts[c.projectId] || 0) + 1; });
+    let topProjectTodayId = null;
+    let topProjectTodayCount = 0;
+    Object.keys(todayProjectCounts).forEach(pid => {
+        if (todayProjectCounts[pid] > topProjectTodayCount) {
+            topProjectTodayCount = todayProjectCounts[pid];
+            topProjectTodayId = pid;
+        }
+    });
+
+    // --- Compose export text (Logseq-friendly) ---
+    // Friendly date for header
+    const niceDate = new Date().toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+
     let text = '';
+    // Top-level bullet heading (Logseq-friendly) with friendly date
+    text += `- 📓 Daily Cookie Log — ${niceDate}\n`;
+
+    // TODAY section as nested bullet under heading (with separator)
+    text += `  - ---\n`;
+    text += `  - 📅 **Today (${todayCount} cookies)**\n`;
+
+    // Sort today's cookies by timestamp
+    todayCookies.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
     todayCookies.forEach(c => {
         const project = projects.find(p => p.id === c.projectId);
         const projectName = project ? project.name : 'Unknown Project';
@@ -607,23 +661,54 @@ function exportLogseq() {
             tagsStr = ' ' + project.tags.map(t => `#${t}`).join(' ');
         }
 
-        // Logseq format: - HH:MM [[Project Name]] #tag1 #tag2 Content
-        // Note: c.note is the content, not c.content (based on save-cookie in renderer.js)
-        // Wait, let me check renderer.js again. It sends { note: ... }.
-        // But in stats.js loadData, it gets cookies.
-        // Let's check if the cookie object has 'note' or 'content'.
-        // In renderer.js: ipcRenderer.sendSync('save-cookie', { ..., note, ... });
-        // So it should be c.note.
-        // However, in my previous edit I used c.content. I should fix that if it's wrong.
-        // Let's check main.js save-cookie handler. It pushes cookieData directly.
-        // So it is 'note'.
-
-        const content = c.note || c.content || ''; // Fallback just in case
-        text += `- ${timeStr} [[${projectName}]]${tagsStr} ${content}\n`;
+        const content = c.note || c.content || '';
+        text += `    - ${timeStr} [[${projectName}]]${tagsStr} ${content}\n`;
     });
 
+    text += '\n';
+
+    // ACHIEVEMENTS section as nested bullet under heading (below Today, with separator)
+    text += `  - ---\n`;
+    text += `  - 🏆 **Notable Achievements**\n`;
+    text += `    - **Total cookies:** ${totalCookies}\n`;
+
+    if (isNewRecord) {
+        text += `    - 🎉 **New daily record:** ${todayCount} cookies (previous best: ${prevBest})\n`;
+    } else if (prevBest > 0) {
+        text += `    - **Today:** ${todayCount} cookies (best: ${prevBest})\n`;
+    }
+
+    // Per-project milestones (first cookie and common milestones)
+    const milestones = [10, 25, 50, 100];
+    projects.forEach(p => {
+        const cnt = projectCounts[p.id] || 0;
+        if (cnt === 1) {
+            text += `    - 🎯 First cookie in [[${p.name}]]\n`;
+        } else if (milestones.includes(cnt)) {
+            text += `    - 🏁 [[${p.name}]] reached ${cnt} cookies\n`;
+        }
+    });
+
+    // Tag milestones
+    Object.keys(tagCounts).sort().forEach(tag => {
+        const tcnt = tagCounts[tag];
+        if (tcnt === 1) {
+            text += `    - ✨ First cookie for #${tag}\n`;
+        }
+    });
+
+    // Top project today
+    if (topProjectTodayId) {
+        const topProject = projects.find(p => p.id === topProjectTodayId);
+        const topName = topProject ? topProject.name : 'Unknown';
+        text += `    - 🔝 Top project today: [[${topName}]] (${topProjectTodayCount})\n`;
+    }
+
+    // Final spacer
+    text += '\n';
+
     clipboard.writeText(text);
-    showToast(`Copied ${todayCookies.length} cookies to clipboard for Logseq!`, 'success');
+    showToast(`Copied ${todayCookies.length} cookies + achievements to clipboard for Logseq!`, 'success');
 }
 
 function showToast(message, type = 'info') {
