@@ -1,4 +1,6 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, clipboard } = require('electron');
+const fs = require('fs');
+const path = require('path');
 
 // State
 let projects = [];
@@ -11,12 +13,14 @@ let activeTagFilter = null;
 const pages = {
     dashboard: document.getElementById('dashboard'),
     projects: document.getElementById('projects'),
+    data: document.getElementById('data'),
     projectDetails: document.getElementById('project-details')
 };
 
 const navItems = {
     dashboard: document.getElementById('nav-dashboard'),
-    projects: document.getElementById('nav-projects')
+    projects: document.getElementById('nav-projects'),
+    data: document.getElementById('nav-data')
 };
 
 // Initialization
@@ -53,6 +57,22 @@ function setupEventListeners() {
         // activeTagFilter = null; 
         showPage('projects');
     });
+    navItems.data.addEventListener('click', () => showPage('data'));
+
+    // Data Management
+    const btnExportJson = document.getElementById('btn-export-json');
+    if (btnExportJson) btnExportJson.addEventListener('click', exportJSON);
+
+    const btnImportJson = document.getElementById('btn-import-json');
+    if (btnImportJson) btnImportJson.addEventListener('click', () => {
+        document.getElementById('file-import-json').click();
+    });
+
+    const fileImportJson = document.getElementById('file-import-json');
+    if (fileImportJson) fileImportJson.addEventListener('change', handleImportJSON);
+
+    const btnExportLogseq = document.getElementById('btn-export-logseq');
+    if (btnExportLogseq) btnExportLogseq.addEventListener('click', exportLogseq);
 
     // Search & Filter
     const searchInput = document.getElementById('project-search');
@@ -481,13 +501,129 @@ function deleteCookie(id) {
         ipcRenderer.sendSync('delete-cookie', id);
         loadData();
         // Refresh details view if open
-        const detailsPage = document.getElementById('project-details');
-        if (detailsPage.classList.contains('active')) {
+        if (currentView === 'projectDetails') {
             const currentProjectName = document.getElementById('pd-name').innerText;
             const p = projects.find(p => p.name === currentProjectName);
             if (p) openProjectDetails(p);
         }
     }
+}
+
+// --- Data Management ---
+
+function exportJSON() {
+    const data = {
+        projects: projects,
+        cookies: cookies,
+        exportDate: new Date().toISOString()
+    };
+
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cookiejar-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function handleImportJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.projects || !data.cookies) {
+                alert('Invalid backup file format.');
+                return;
+            }
+
+            if (confirm('This will overwrite all current data. Are you sure?')) {
+                const result = ipcRenderer.sendSync('import-data', data);
+                if (result.success) {
+                    alert('Data imported successfully!');
+                    loadData();
+                } else {
+                    alert('Import failed: ' + result.error);
+                }
+            }
+        } catch (err) {
+            alert('Error parsing JSON file: ' + err.message);
+        }
+        // Reset input
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+function exportLogseq() {
+    const today = new Date().toDateString();
+    const todayCookies = cookies.filter(c => new Date(c.timestamp).toDateString() === today);
+
+    if (todayCookies.length === 0) {
+        showToast('No cookies found for today.', 'error');
+        return;
+    }
+
+    let text = '';
+    todayCookies.forEach(c => {
+        const project = projects.find(p => p.id === c.projectId);
+        const projectName = project ? project.name : 'Unknown Project';
+
+        // Format time HH:MM
+        const date = new Date(c.timestamp);
+        const timeStr = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+
+        // Format tags
+        let tagsStr = '';
+        if (project && project.tags && project.tags.length > 0) {
+            tagsStr = ' ' + project.tags.map(t => `#${t}`).join(' ');
+        }
+
+        // Logseq format: - HH:MM [[Project Name]] #tag1 #tag2 Content
+        // Note: c.note is the content, not c.content (based on save-cookie in renderer.js)
+        // Wait, let me check renderer.js again. It sends { note: ... }.
+        // But in stats.js loadData, it gets cookies.
+        // Let's check if the cookie object has 'note' or 'content'.
+        // In renderer.js: ipcRenderer.sendSync('save-cookie', { ..., note, ... });
+        // So it should be c.note.
+        // However, in my previous edit I used c.content. I should fix that if it's wrong.
+        // Let's check main.js save-cookie handler. It pushes cookieData directly.
+        // So it is 'note'.
+
+        const content = c.note || c.content || ''; // Fallback just in case
+        text += `- ${timeStr} [[${projectName}]]${tagsStr} ${content}\n`;
+    });
+
+    clipboard.writeText(text);
+    showToast(`Copied ${todayCookies.length} cookies to clipboard for Logseq!`, 'success');
+}
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerText = message;
+
+    container.appendChild(toast);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'fadeOut 0.3s ease-out forwards';
+        setTimeout(() => {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
 }
 
 // Start

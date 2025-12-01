@@ -21,6 +21,9 @@
         <div class="nav-item" id="nav-projects">
             <span>📁</span> Projects
         </div>
+        <div class="nav-item" id="nav-data">
+            <span>💾</span> Data
+        </div>
     </div>
 
     <div class="main-content">
@@ -86,6 +89,31 @@
             <div class="projects-grid" id="projects-grid"></div>
         </div>
 
+        <!-- Data Management -->
+        <div id="data" class="page">
+            <div class="header-row">
+                <h1>Data Management</h1>
+            </div>
+
+            <div class="card">
+                <h3>Backup & Restore</h3>
+                <p>Export your data to a JSON file or restore from a backup.</p>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-secondary" id="btn-export-json">Export JSON</button>
+                    <button class="btn btn-secondary" id="btn-import-json">Import JSON</button>
+                    <input type="file" id="file-import-json" style="display: none" accept=".json">
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Logseq Export</h3>
+                <p>Copy today's cookies to clipboard formatted for Logseq.</p>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-secondary" id="btn-export-logseq">Copy Today's Cookies</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Project Details (Drill-down) -->
         <div id="project-details" class="page">
             <div class="breadcrumb" onclick="backToProjects()">← Back to Projects</div>
@@ -125,6 +153,9 @@
         </div>
     </div>
 
+    <div id="toast-container"
+        style="position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px;">
+    </div>
     <script src="stats.js"></script>
 </body>
 

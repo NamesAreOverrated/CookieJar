@@ -257,3 +257,19 @@ ipcMain.on('delete-project', (event, projectId) => {
         event.returnValue = false;
     }
 });
+
+ipcMain.on('import-data', (event, data) => {
+    try {
+        if (data.projects && Array.isArray(data.projects)) {
+            store.set('projects', data.projects);
+        }
+        if (data.cookies && Array.isArray(data.cookies)) {
+            store.set('cookies', data.cookies);
+        }
+        if (statsWindow) statsWindow.webContents.send('data-changed');
+        if (mainWindow) mainWindow.webContents.send('refresh-jar');
+        event.returnValue = { success: true };
+    } catch (error) {
+        event.returnValue = { success: false, error: error.message };
+    }
+});
