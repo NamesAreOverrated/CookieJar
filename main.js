@@ -3,6 +3,7 @@ const path = require('path');
 const Store = require('electron-store');
 
 const store = new Store();
+const cookieUtils = require('./lib/cookieUtils');
 
 let mainWindow;
 let statsWindow;
@@ -83,62 +84,50 @@ ipcMain.on('open-stats', () => {
 });
 
 ipcMain.on('get-cookies', (event) => {
-    let cookies = store.get('cookies', []);
-    let changed = false;
-    cookies = cookies.map((c, i) => {
-        if (!c.id) {
-            c.id = Date.now().toString() + '-' + i + '-' + Math.random().toString(36).substr(2, 5);
-            changed = true;
-        } else if (typeof c.id !== 'string') {
-            c.id = String(c.id);
-            changed = true;
-        }
-        return c;
-    });
-    if (changed) {
-        store.set('cookies', cookies);
+    try {
+        const cookies = cookieUtils.getCookies();
+        event.returnValue = cookies;
+    } catch (err) {
+        console.error('Error in get-cookies:', err && err.message);
+        event.returnValue = [];
     }
-    event.returnValue = cookies;
 });
 
 ipcMain.on('save-cookie', (event, cookieData) => {
-    const cookies = store.get('cookies', []);
-    // Ensure unique ID
-    cookieData.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-    cookies.push(cookieData);
-    store.set('cookies', cookies);
-    if (statsWindow) statsWindow.webContents.send('data-changed');
-    event.returnValue = true;
+    try {
+        const saved = cookieUtils.saveCookie(cookieData);
+        if (statsWindow) statsWindow.webContents.send('data-changed');
+        if (mainWindow) mainWindow.webContents.send('refresh-jar');
+        event.returnValue = !!saved;
+    } catch (err) {
+        console.error('save-cookie error', err && err.message);
+        event.returnValue = false;
+    }
 });
 
 ipcMain.on('update-cookie', (event, updatedCookie) => {
-    const cookies = store.get('cookies', []);
-    // Use loose comparison or string conversion to be safe
-    const index = cookies.findIndex(c => String(c.id) === String(updatedCookie.id));
-    if (index !== -1) {
-        cookies[index] = { ...cookies[index], ...updatedCookie };
-        store.set('cookies', cookies);
-        if (statsWindow) statsWindow.webContents.send('data-changed');
-        event.returnValue = true;
-    } else {
+    try {
+        const ok = cookieUtils.updateCookie(updatedCookie);
+        if (ok && statsWindow) statsWindow.webContents.send('data-changed');
+        event.returnValue = ok;
+    } catch (err) {
+        console.error('update-cookie error', err && err.message);
         event.returnValue = false;
     }
 });
 
 ipcMain.on('delete-cookie', (event, cookieId) => {
-    let cookies = store.get('cookies', []);
-    const cookieToDelete = cookies.find(c => String(c.id) === String(cookieId));
-    if (cookieToDelete) {
-        cookies = cookies.filter(c => String(c.id) !== String(cookieId));
-        store.set('cookies', cookies);
-
-        // Notify renderer to remove a visual cookie
-        if (mainWindow) {
-            mainWindow.webContents.send('cookie-deleted', cookieToDelete);
+    try {
+        const removed = cookieUtils.deleteCookie(cookieId);
+        if (removed) {
+            if (mainWindow) mainWindow.webContents.send('cookie-deleted', removed);
+            if (statsWindow) statsWindow.webContents.send('data-changed');
+            event.returnValue = true;
+        } else {
+            event.returnValue = false;
         }
-        if (statsWindow) statsWindow.webContents.send('data-changed');
-        event.returnValue = true;
-    } else {
+    } catch (err) {
+        console.error('delete-cookie error', err && err.message);
         event.returnValue = false;
     }
 });
@@ -258,16 +247,18 @@ ipcMain.on('delete-project', (event, projectId) => {
 
 ipcMain.on('import-data', (event, data) => {
     try {
-        if (data.projects && Array.isArray(data.projects)) {
-            store.set('projects', data.projects);
-        }
-        if (data.cookies && Array.isArray(data.cookies)) {
-            store.set('cookies', data.cookies);
+        const result = cookieUtils.importData(data);
+        if (!result.success) {
+            event.returnValue = result;
+            return;
         }
         if (statsWindow) statsWindow.webContents.send('data-changed');
         if (mainWindow) mainWindow.webContents.send('refresh-jar');
         event.returnValue = { success: true };
     } catch (error) {
+        console.error('import-data error', error && error.message);
         event.returnValue = { success: false, error: error.message };
     }
 });
+
+// No expiry cleanup: app no longer supports expiresAt on cookies
