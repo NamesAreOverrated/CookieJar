@@ -372,17 +372,58 @@ function createCookieListItem(cookie, project) {
     const date = new Date(cookie.timestamp).toLocaleString();
     const projectName = project ? project.name : 'Unknown';
 
-    div.innerHTML = `
-        <div class="list-item-content">
-            <div style="font-weight:600; margin-bottom:4px;">${projectName}</div>
-            <div>${cookie.note || '<span style="color:#b2bec3; font-style:italic;">No note</span>'}</div>
-            <div class="list-item-meta">${date}</div>
-        </div>
-        <div>
-            <button class="btn btn-sm btn-secondary" onclick='showCookieForm("${cookie.id}")'>Edit</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteCookie('${cookie.id}')">×</button>
-        </div>
-    `;
+    // Left content
+    const content = document.createElement('div');
+    content.className = 'list-item-content';
+
+    const title = document.createElement('div');
+    title.style.fontWeight = 600;
+    title.style.marginBottom = '4px';
+    title.textContent = projectName;
+
+    const noteDiv = document.createElement('div');
+    if (cookie.note && cookie.note.length) {
+        // Use textContent to avoid injecting HTML
+        noteDiv.textContent = cookie.note;
+    } else {
+        noteDiv.innerHTML = '<span style="color:#b2bec3; font-style:italic;">No note</span>';
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'list-item-meta';
+    meta.textContent = date;
+
+    content.appendChild(title);
+    content.appendChild(noteDiv);
+    content.appendChild(meta);
+
+    // Right actions
+    const actions = document.createElement('div');
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-sm btn-secondary';
+    editBtn.type = 'button';
+    editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showCookieForm(cookie.id);
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn btn-sm btn-danger';
+    delBtn.type = 'button';
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteCookie(cookie.id);
+    });
+
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+
+    div.appendChild(content);
+    div.appendChild(actions);
+
     return div;
 }
 
@@ -690,22 +731,62 @@ function exportLogseq() {
         text += `    - **Today:** ${todayCount} cookies (best: ${prevBest})\n`;
     }
 
-    // Per-project milestones (first cookie and common milestones)
-    const milestones = [10, 25, 50, 100];
-    projects.forEach(p => {
-        const cnt = projectCounts[p.id] || 0;
-        if (cnt === 1) {
-            text += `    - 🎯 First cookie in [[${p.name}]]\n`;
-        } else if (milestones.includes(cnt)) {
-            text += `    - 🏁 [[${p.name}]] reached ${cnt} cookies\n`;
+    // --- Milestones ---
+    // We only care about milestones newly triggered today. For each project/tag
+    // that received at least one cookie today, compute the total (including today)
+    // and the count before today. A milestone occurs when total === 1 or total % 5 === 0
+    // and it was NOT already a milestone before today.
+
+    // Helper
+    const isMilestoneCount = (n) => (n === 1) || (n % 5 === 0 && n > 0);
+
+    // Project counts before today
+    const projectCountsBefore = {};
+    cookies.forEach(c => {
+        const d = new Date(c.timestamp).toDateString();
+        if (d !== today) {
+            projectCountsBefore[c.projectId] = (projectCountsBefore[c.projectId] || 0) + 1;
         }
     });
 
-    // Tag milestones
-    Object.keys(tagCounts).sort().forEach(tag => {
-        const tcnt = tagCounts[tag];
-        if (tcnt === 1) {
-            text += `    - ✨ First cookie for #${tag}\n`;
+    // Tag counts before today
+    const tagCountsBefore = {};
+    cookies.forEach(c => {
+        const d = new Date(c.timestamp).toDateString();
+        if (d !== today) {
+            const proj = projects.find(p => p.id === c.projectId);
+            if (proj && proj.tags && proj.tags.length) {
+                proj.tags.forEach(t => { tagCountsBefore[t] = (tagCountsBefore[t] || 0) + 1; });
+            }
+        }
+    });
+
+    // Project milestones: consider projects that had cookies today
+    const triggeredProjectIds = new Set(Object.keys(todayProjectCounts));
+    triggeredProjectIds.forEach(pid => {
+        const total = projectCounts[pid] || 0;
+        const before = projectCountsBefore[pid] || 0;
+        if (isMilestoneCount(total) && !isMilestoneCount(before)) {
+            const proj = projects.find(p => p.id === pid);
+            const name = proj ? proj.name : pid;
+            text += `    - 🏁 [[${name}]] reached ${total} cookies\n`;
+        }
+    });
+
+    // Tag milestones: compute tags that appeared on today's cookies
+    const tagCountsToday = {};
+    todayCookies.forEach(c => {
+        const proj = projects.find(p => p.id === c.projectId);
+        if (proj && proj.tags && proj.tags.length) {
+            proj.tags.forEach(t => { tagCountsToday[t] = (tagCountsToday[t] || 0) + 1; });
+        }
+    });
+
+    Object.keys(tagCountsToday).sort().forEach(tag => {
+        const total = tagCounts[tag] || 0;
+        const before = tagCountsBefore[tag] || 0;
+        if (isMilestoneCount(total) && !isMilestoneCount(before)) {
+            text += `    - ✨ #${tag} reached ${total} cookies\n`;
         }
     });
 
